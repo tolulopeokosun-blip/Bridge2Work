@@ -1,0 +1,8 @@
+aws_region       = "us-east-1"
+project_name     = "BridgeToWork"
+allowed_ssh_cidr = "203.0.113.25/32" 
+instance_type    = "t3.micro"
+key_name         = "my-ec2-keypair"
+db_username      = "admin"
+db_password      = "SuperSecurePass123!"
+eks_node_instance_type = "t3.small"
