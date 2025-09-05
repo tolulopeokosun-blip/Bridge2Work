@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo
+  template:
+    metadata:
+      labels:
+        app: todo
+    spec:
+      containers:
+        - name: todo
+          image: BridgeToWork/todo-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+            - containerPort: 9100   
+          envFrom:
+            - configMapRef:
+                name: todo-config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+          
+          ports:
+            - name: metrics
+              containerPort: 9100
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 9100
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+        - name: fluent-bit
+          image: fluent/fluent-bit:latest
+          args: ["-c", "/fluent-bit/etc/fluent-bit.conf"]
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+            - name: app-logs
+              mountPath: /app/logs
+
+
+      volumes:
+        - name: varlog
+          emptyDir: {}
+        - name: app-logs
+          emptyDir: {}
